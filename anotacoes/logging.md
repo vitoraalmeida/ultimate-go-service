@@ -1,10 +1,7 @@
-Não fazer coisas fáceis de fazer, mas sim fáceis de entender.
-Não adicionar complexidade até que seja necessário.
-    Ex.: não começar com microservices
-Tudo que fazemos deve ser preciso
+Qual o propósito de logs no projeto?
 
-Pacotes e as camadas permitem criar barreiras (firewalls)
-entre o código e sermos específicos em termos de domínio (DDD)
+Se não sabemos responder, provavelmente não estamos criando logs tão
+efetivamente quanto poderíamos
 
 Logging é a janela para a saúde dos serviços, a janela para os 
 problemas que estão acontecendo, a primeira chance de identificar
@@ -17,8 +14,10 @@ Debuggers não acham bugs, apenas executam eles devagar.
 
 Logs são para serem consumidos por humanos
 
+Neste projeto utilizamos o zap logger (uber). Passamos o logger para
+todos os locais que precisamos. Se estamos usando essa lib, vamos nos 
+comprometer com ela e não vamos abstrair seu uso. Se for necessário mudar
+refatoramos para aderir a outra lib (pois toda mudança acaba gerando
+algumas refatorações no caso concreto).
+
 Toda abstração adiciona complexidade
-
-Rob Pike - Não fazemos design com interfaces, nós as descobrimos
-
-Depois de descobrirmos abstrações, adicionamos
