@@ -1,0 +1,33 @@
+# Container para contruir o binário go
+FROM golang:1.20 as build_sales-api
+ENV CGO_ENABLED 0 #
+ARG BUILD_REF # recebe argumento do comando de build e armazena na variável
+# variável usada para identificar a versão do software que está sendo executada
+
+# Copia o código fonte para o container
+COPY . /service
+
+# Constrói o binário
+WORKDIR /service/app/services/sales-api
+# ldflags permite passar um valor para uma variável que esteja na função main
+RUN go build -ldflags "-X main.build=${BUILD_REF}"
+
+
+# Cria imagem que possui o binário construído apenas para execução (mais leve)
+FROM alpine:3.18
+ARG BUILD_DATE
+ARG BUILD_REF
+# define usuário não root para executar o container
+RUN addgroup -g 1000 -S sales && \
+    adduser -u 1000 -h /service -G sales -S sales
+COPY --from=build_sales-api --chown=sales:sales /service/app/services/sales-api/sales-api /service/sales-api
+WORKDIR /service
+USER sales
+CMD ["./sales-api"]
+
+LABEL org.opencontainers.image.created="${BUILD_DATE}" \
+      org.opencontainers.image.title="sales-api" \
+      org.opencontainers.image.authors="Vitor Almeida <pro.vitoralmeida@gmail.com> e William Kennedy <bill@ardanlabs.com>" \
+      org.opencontainers.image.source="https://github.com/vitoraalmeida/service/app/sales-api" \
+      org.opencontainers.image.revision="${BUILD_REF}" \
+      org.opencontainers.image.vendor="Vitor Almeida"

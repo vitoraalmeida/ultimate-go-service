@@ -11,6 +11,9 @@ import (
 	"go.uber.org/zap"
 )
 
+// é alterado por ldflags
+var build = "develop"
+
 func main() {
 	// construímos nosso logger e passaremos ele concretamente para os componentes
 	// que precisarmos. Não devemos adicionar loggers em contexts, pois assim
@@ -39,7 +42,7 @@ func run(log *zap.SugaredLogger) error {
 	// -------------------------------------------------------------------------
 	// GOMAXPROCS
 
-	log.Infow("startup", "GOMAXPROCS", runtime.GOMAXPROCS(0))
+	log.Infow("startup", "GOMAXPROCS", runtime.GOMAXPROCS(0), "BUILD", build)
 
 	// -------------------------------------------------------------------------
 
