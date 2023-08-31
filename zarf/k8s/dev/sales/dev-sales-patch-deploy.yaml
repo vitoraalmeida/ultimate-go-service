@@ -1,0 +1,31 @@
+# o que for igual é mantido no arquivo base
+# se não existir no base, é adicionado
+# se existir, é acrescentado ou modificado
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: sales
+  namespace: sales-system
+
+spec:
+  selector:
+    matchLabels:
+      app: sales
+
+  # define quantas instâncias do pod irão ser criadas
+  replicas: 1
+
+  # pods antigos são deletados antes dos novos serem iniciados
+  strategy:
+    type: Recreate
+
+  template:
+    metadata:
+      labels:
+        app: sales
+
+    # documentação k8s:
+    # If a pod runs in the host network of the node where the pod is deployed, the pod can use the network namespace and network resources of the node. In this case, the pod can access loopback devices, listen to addresses, and monitor the traffic of other pods on the node. 
+    spec:
+      dnsPolicy: ClusterFirstWithHostNet
+      hostNetwork: true
