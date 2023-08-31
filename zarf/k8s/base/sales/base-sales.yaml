@@ -35,3 +35,12 @@ spec:
       - name: sales-api
         # a imagem é passada durante a customização (kustomize)
         image: service-image # placeholder
+
+        # GOMAXPROCS vai ser igual ao valor definido no limits para esse deploy
+        env:
+        - name: GOMAXPROCS
+          valueFrom:
+            resourceFieldRef:
+              # se o valor não for exato, ele arredonda pra cima
+              # 1500m cpu -> 1.5 -> GOMAXPROCS = 2
+              resource: limits.cpu

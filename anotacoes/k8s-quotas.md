@@ -66,3 +66,15 @@ executando o que queremos), Go é possivelmente a melhor tecnologia.
 
 Para fazermos programas Go o mais eficientes possíveis, devemos definir que ele
 deve usar tantas trheads quanto o número de cores disponíveis.
+
+### consumo de recursos pelo go no k8s
+
+O runtime do Go não sabe que está rodando num k8s, não sabe que para o pod em que
+ele está rodando apenas foram concedidos apenas 2 cores por exemplo num nó (maquina)
+com 8. Então ele vai agir como se estivesse rodando em 8 cores, ou seja, 1 thread 
+para cada core. Para configurar isso precisamos definir que GOMAXPROCS sempre
+combine com o número de cores disponíveis.
+
+Podemos fazer isso definindo variáveis de ambiente no nosso deployment do k8s
+de forma que a variaǘel GOMAXPROCS seja definida buscando a informação que está no
+"limit"
