@@ -29,3 +29,13 @@ spec:
     spec:
       dnsPolicy: ClusterFirstWithHostNet
       hostNetwork: true
+
+      containers:
+      - name: sales-api
+        resources:
+          requests:
+            cpu: "1500m" # Pede acesso a 1.5 cores no nó, ou seja, preciso de 2 cores disponíveis
+            memory: 500Mi # então o go vai utilizar 2 threads de sistema operacional para executar go routines
+          limits:
+            cpu: "1500m" # De 200ms disponíveis de tempo de computação (2cores), quero utilizar 150 só para esse container
+            memory: 500Mi # ou seja, 1 core completamente e metade do tempo disponível no outro
