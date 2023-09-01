@@ -3,6 +3,7 @@ package main
 import (
 	"errors"
 	"fmt"
+	"net/http"
 	"os"
 	"os/signal"
 	"runtime"
@@ -10,6 +11,7 @@ import (
 	"time"
 
 	"github.com/ardanlabs/conf/v3"
+	"github.com/vitoraalmeida/service/business/web/v1/debug"
 	"github.com/vitoraalmeida/service/foundation/logger"
 	"go.uber.org/zap"
 )
@@ -68,6 +70,10 @@ func run(log *zap.SugaredLogger) error {
 			ShutdownTimeout time.Duration `conf:"default:20s"`
 			APIHost         string        `conf:"default:0.0.0.0:3000"`
 			DebugHost       string        `conf:"default:0.0.0.0:4000"`
+			//adicionar noprint no fim da tag de configuração caso não queira que essa info vá para o log
+			//DebugHost       string        `conf:"default:0.0.0.0:4000,noprint"`
+			//adicionar mask no fim da tag de configuração caso queira que apareça, mas mascarado
+			//DebugHost       string        `conf:"default:0.0.0.0:4000,mask"`
 		}
 	}{
 		Version: conf.Version{
@@ -104,6 +110,18 @@ func run(log *zap.SugaredLogger) error {
 		return fmt.Errorf("generating config for output: %w", err)
 	}
 	log.Infow("startup", "config", out)
+
+	// -------------------------------------------------------------------------
+	// Inicia serviço de debug
+
+	log.Infow("startup", "status", "debug v1 router started", "host", cfg.Web.DebugHost)
+
+	// iniciamos uma goroutine separada para servir os endpoints de debug
+	go func() {
+		if err := http.ListenAndServe(cfg.Web.DebugHost, debug.StandardLibraryMux()); err != nil {
+			log.Errorw("shutdown", "status", "debug v1 router closed", "host", cfg.Web.DebugHost, "ERROR", err)
+		}
+	}()
 
 	// -------------------------------------------------------------------------
 

@@ -111,3 +111,7 @@ run-local-help:
 tidy:
 	go mod tidy
 	go mod vendor
+
+# inicia o serviço de debug
+metrics-view-local:
+	expvarmon -ports="localhost:4000" -vars="build,requests,goroutines,errors,panics,mem:memstats.Alloc"
