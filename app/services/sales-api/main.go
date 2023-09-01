@@ -1,12 +1,15 @@
 package main
 
 import (
+	"errors"
 	"fmt"
 	"os"
 	"os/signal"
 	"runtime"
 	"syscall"
+	"time"
 
+	"github.com/ardanlabs/conf/v3"
 	"github.com/vitoraalmeida/service/foundation/logger"
 	"go.uber.org/zap"
 )
@@ -43,6 +46,51 @@ func run(log *zap.SugaredLogger) error {
 	// GOMAXPROCS
 
 	log.Infow("startup", "GOMAXPROCS", runtime.GOMAXPROCS(0), "BUILD", build)
+
+	// -------------------------------------------------------------------------
+	// Configuration
+
+	// usar tipos literais (structs sem nomes) garantimos que quem vai receber
+	// a configuração deve ser preciso sobre o que vai chegar na sua API. Assim
+	// removemos o risco de criar abstrações que podem ou não abarcar elementos
+	// que queremos utilizar. Precisão!
+	// Preciso de uma banana, mas como gorilas de vez enquando possuem bananas,
+	// vou esperar um gorila inteiro, sendo que pode ser que ele não esteja com
+	// uma banana? Não, vou esperar especificamente bananas.
+	cfg := struct {
+		conf.Version
+		// Podemos  definir variávies de ambiente que conf irá procurar let
+		// nesse caso: WEB_RED_TIMEOUT e assim sucessivamente
+		Web struct {
+			ReadTimeout     time.Duration `conf:"default:5s"` // define configs padrão
+			WriteTimeout    time.Duration `conf:"default:10s"`
+			IdleTimeout     time.Duration `conf:"default:120s"`
+			ShutdownTimeout time.Duration `conf:"default:20s"`
+			APIHost         string        `conf:"default:0.0.0.0:3000"`
+			DebugHost       string        `conf:"default:0.0.0.0:4000"`
+		}
+	}{
+		Version: conf.Version{
+			Build: build,
+			Desc:  "copyright information here",
+		},
+	}
+
+	const prefix = "SALES" // prefixo para as variáveis de ambiente -> SALES_WEB_READ_TIMEOUT
+	// Parse recebe o objeto que criamos para a configuração e procura por
+	// variáveis de ambiente ou flags de linha de comando que sobrescrevam o
+	// default.
+	help, err := conf.Parse(prefix, &cfg)
+	if err != nil {
+		// na tentativa de fazer o parsing de command line flags, se o usuário
+		// digitou "help", conf.Parse retorna um erro específico para indicar
+		// que devemos mostrar a mensagem de ajuda
+		if errors.Is(err, conf.ErrHelpWanted) {
+			fmt.Println(help)
+			return nil
+		}
+		return fmt.Errorf("parsing config: %w", err)
+	}
 
 	// -------------------------------------------------------------------------
 

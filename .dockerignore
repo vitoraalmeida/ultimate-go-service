@@ -1,5 +1,6 @@
 .dockerignore
 .gitignore
+anotacoes/
 zarf/docker/
 zarf/k8s/
 makefile
