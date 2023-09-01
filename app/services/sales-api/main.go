@@ -93,6 +93,19 @@ func run(log *zap.SugaredLogger) error {
 	}
 
 	// -------------------------------------------------------------------------
+	// App Starting
+
+	log.Infow("starting service", "version", build)
+	defer log.Infow("shutdown complete")
+
+	// gera string que contém as informações de configução que foram usadas
+	out, err := conf.String(&cfg)
+	if err != nil {
+		return fmt.Errorf("generating config for output: %w", err)
+	}
+	log.Infow("startup", "config", out)
+
+	// -------------------------------------------------------------------------
 
 	// Canal para onde poderá ser enviado sinais de SO para encerrar o programa
 	shutdown := make(chan os.Signal, 1)
