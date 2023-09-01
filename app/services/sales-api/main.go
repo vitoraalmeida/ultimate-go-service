@@ -69,7 +69,8 @@ func run(log *zap.SugaredLogger) error {
 			IdleTimeout     time.Duration `conf:"default:120s"`
 			ShutdownTimeout time.Duration `conf:"default:20s"`
 			APIHost         string        `conf:"default:0.0.0.0:3000"`
-			DebugHost       string        `conf:"default:0.0.0.0:4000"`
+			// definir o host do serviço de debug em outro ip/rota para impossbilitar o acesso externo
+			DebugHost string `conf:"default:0.0.0.0:4000"`
 			//adicionar noprint no fim da tag de configuração caso não queira que essa info vá para o log
 			//DebugHost       string        `conf:"default:0.0.0.0:4000,noprint"`
 			//adicionar mask no fim da tag de configuração caso queira que apareça, mas mascarado
