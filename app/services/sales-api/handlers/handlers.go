@@ -4,8 +4,8 @@ import (
 	"net/http"
 	"os"
 
-	"github.com/dimfeld/httptreemux/v5"
 	"github.com/vitoraalmeida/service/app/services/sales-api/handlers/v1/testgrp"
+	"github.com/vitoraalmeida/service/foundation/web"
 	"go.uber.org/zap"
 )
 
@@ -15,16 +15,18 @@ type APIMuxConfig struct {
 	Log      *zap.SugaredLogger
 }
 
-// APIMux contrói um mux (http.Handler) com todas as rotas definidas para a aplicação
-// o httptreemux.ContextMux implementa o http.Handler. Retornamos o tipo concreto
-// ao invés de retornar uma interface (http.Handler) para que o usuário decida
-// o que fazer com o que a api retorna.
-func APIMux(cfg APIMuxConfig) *httptreemux.ContextMux {
-	// NewContextMux retorna um mux que implementa http.Handler
-	mux := httptreemux.NewContextMux()
+// APIMux contrói um mux ( que implementa http.Handler) com todas as rotas
+// definidas para a aplicação.
+// web.App é um envoltório para o mux httptreemux.ContextMux, adicionando
+// possível configurações e contexto que precisarmos
+// o httptreemux.ContextMux implementa o http.Handler.
+func APIMux(cfg APIMuxConfig) *web.App {
+	app := web.NewApp(cfg.shutdown)
 
 	// Registra um handleFunc que irá prcessar requisições get em /test
-	mux.Handle(http.MethodGet, "/test", testgrp.Test)
+	app.Handle(http.MethodGet, "/test", testgrp.Test)
 
-	return mux
+	// o objeto App implementa a internface http.Handler que é necessário para
+	// construir um http.Server
+	return app
 }
