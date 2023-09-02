@@ -1,0 +1,22 @@
+apiVersion: v1
+kind: Service
+metadata:
+  name: sales-api
+  namespace: sales-system
+
+# expõe as portas 3000 e 4000 para acesso no cluster
+spec:
+  selector:
+    app: sales
+
+  type: ClusterIP
+
+  # mapeia as portas do cluster para portas de containers que tenham definido o nome
+  # igual ao definido em targetPort
+  ports:
+  - name: sales-api
+    port: 3000
+    targetPort: sales-api
+  - name: sales-api-debug
+    port: 4000
+    targetPort: sales-api-debug

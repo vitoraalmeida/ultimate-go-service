@@ -36,6 +36,16 @@ spec:
         # a imagem é passada durante a customização (kustomize)
         image: service-image # placeholder
 
+        # determina as portas do container que serão expostas
+        # serão mapeadas à portas do cluster que serão abertas em um k8s service
+        # assim o cluster pode escutar em qualquer porta que quiser e redirecionar
+        # para a porta que definimos no container
+        ports:
+        - name: sales-api
+          containerPort: 3000
+        - name: sales-api-debug
+          containerPort: 4000
+
         # GOMAXPROCS vai ser igual ao valor definido no limits para esse deploy
         env:
         - name: GOMAXPROCS
@@ -44,3 +54,13 @@ spec:
               # se o valor não for exato, ele arredonda pra cima
               # 1500m cpu -> 1.5 -> GOMAXPROCS = 2
               resource: limits.cpu
+
+                
+---
+# Services permitem expor serviços, dns, portas, clusterIP...
+# Configurações específicas devem ser adicionadas como patches kustomize
+apiVersion: v1
+kind: Service
+metadata:
+  name: sales-api
+  namespace: sales-system
