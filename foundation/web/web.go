@@ -6,7 +6,7 @@ import (
 	"net/http"
 	"os"
 
-	"github.com/dimfeld/httptreemux"
+	"github.com/dimfeld/httptreemux/v5"
 )
 
 // Tipo que lida com http requests no nosso framework.
@@ -51,7 +51,7 @@ func (a *App) Handle(method string, path string, handler Handler) {
 		// ex.: verificar autenticação, criar um log da requisição etc
 
 		// chama
-		if err := handler(r.Contex(), w, r); err != nil {
+		if err := handler(r.Context(), w, r); err != nil {
 			fmt.Println(err)
 			return
 		}
@@ -63,5 +63,5 @@ func (a *App) Handle(method string, path string, handler Handler) {
 	// como h tem a assinatura que o ContextMux.Handler espera, podemos usar
 	// a lógica já implementada de roteamento do httptreemux, porém h possui
 	// aa mecânica que usa contexto que desejamos
-	a.ContextMux.Handler(method, path, h)
+	a.ContextMux.Handle(method, path, h)
 }

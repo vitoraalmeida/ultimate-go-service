@@ -21,7 +21,7 @@ type APIMuxConfig struct {
 // possível configurações e contexto que precisarmos
 // o httptreemux.ContextMux implementa o http.Handler.
 func APIMux(cfg APIMuxConfig) *web.App {
-	app := web.NewApp(cfg.shutdown)
+	app := web.NewApp(cfg.Shutdown)
 
 	// Registra um handleFunc que irá prcessar requisições get em /test
 	app.Handle(http.MethodGet, "/test", testgrp.Test)
