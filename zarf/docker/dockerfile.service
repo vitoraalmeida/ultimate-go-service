@@ -1,5 +1,5 @@
 # Container para contruir o binário go
-FROM golang:1.20 as build_sales-api
+FROM golang:1.21 as build_sales-api
 # define se é para utilizar linking de libs C no binário
 ENV CGO_ENABLED 0
 ARG BUILD_REF # recebe argumento do comando de build e armazena na variável
