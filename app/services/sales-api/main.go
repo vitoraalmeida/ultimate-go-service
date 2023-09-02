@@ -1,6 +1,7 @@
 package main
 
 import (
+	"context"
 	"errors"
 	"fmt"
 	"net/http"
@@ -118,6 +119,8 @@ func run(log *zap.SugaredLogger) error {
 	log.Infow("startup", "status", "debug v1 router started", "host", cfg.Web.DebugHost)
 
 	// iniciamos uma goroutine separada para servir os endpoints de debug
+	// caso a goroutine principal morra, não tem problema esta fica orfã, pois
+	// ela apenas realiza leitura
 	go func() {
 		if err := http.ListenAndServe(cfg.Web.DebugHost, debug.StandardLibraryMux()); err != nil {
 			log.Errorw("shutdown", "status", "debug v1 router closed", "host", cfg.Web.DebugHost, "ERROR", err)
@@ -125,6 +128,8 @@ func run(log *zap.SugaredLogger) error {
 	}()
 
 	// -------------------------------------------------------------------------
+	// Inicia o serviço da API
+	log.Infow("startup", "status", "initializing V1 API support")
 
 	// Canal para onde poderá ser enviado sinais de SO para encerrar o programa
 	shutdown := make(chan os.Signal, 1)
@@ -133,12 +138,58 @@ func run(log *zap.SugaredLogger) error {
 	// SIGINT = Ctrl + c
 	signal.Notify(shutdown, syscall.SIGINT, syscall.SIGTERM)
 
-	// Fica aguardando por sinais de shutdown e encerra caso chegue
-	sig := <-shutdown
+	// cria uma instância de http.Server customizada com os valores de configuração
+	api := http.Server{
+		Addr:         cfg.Web.APIHost,
+		Handler:      nil,
+		ReadTimeout:  cfg.Web.ReadTimeout,
+		WriteTimeout: cfg.Web.WriteTimeout,
+		IdleTimeout:  cfg.Web.IdleTimeout,
+		ErrorLog:     zap.NewStdLog(log.Desugar()),
+	}
 
-	log.Infow("shutdown", "status", "shutdown started", "signal", sig)
-	defer log.Infow("shutdown", "status", "shutdown complete", "signal", sig)
-	// executa ações necessárias para terminar de forma segura
+	// cria uma channel para sinalizar erros na API
+	// channels sem buffer (tamanho 1) garantem a quem enviou que o receptor
+	// recebeu, com o custo de que o remetente fica esperando até que o
+	// destinatário receba (aumento de latencia)
+	serverErrors := make(chan error, 1)
 
+	go func() {
+		log.Infow("startup", "status", "api router started", "host", api.Addr)
+		// executa o servidor e caso erros sejam retornados, envia pelo canal
+		// assim garantimos que go routines que sejam iniciadas pelo servidor
+		// não fiquem orfãs caso o servidor pare, pois a goroutine main assume
+		// a responsabilidade
+		serverErrors <- api.ListenAndServe()
+	}()
+
+	// -------------------------------------------------------------------------
+	// Shutdown
+	// select fica aguardando (blocking) enquanto algum dos casos ocorrer,
+	// ou no nosso contexto enquanto algum sinal não chega pelas channels.
+	// Serão sinais de shutdown ou de erro. O que ocorrer primeiro será executado
+	select {
+	case err := <-serverErrors:
+		return fmt.Errorf("server error: %w", err)
+		// Fica aguardando por sinais de shutdown e encerra caso chegue
+	case sig := <-shutdown:
+		log.Infow("shutdown", "status", "shutdown started", "signal", sig)
+		defer log.Infow("shutdown", "status", "shutdown complete", "signal", sig)
+
+		// cria um timer que será usado para, caso o servidor não consiga finalizar
+		// gracefully (api.Shutdown), o programa é interrompido para que não
+		// fique em executação eternamente.
+		ctx, cancel := context.WithTimeout(context.Background(), cfg.Web.ShutdownTimeout)
+		defer cancel()
+
+		// api.Shutdown fecham todos os listeners, as conexões que estão paradas
+		// e então aguarda por trabalhos que já começaram terminaram (evitar
+		// dados corrompidos). Se o contexto
+		// passado finalizar antes disso acontecer, retorna um erro de contexto
+		if err := api.Shutdown(ctx); err != nil {
+			api.Close()
+			return fmt.Errorf("could not stop server gracefully: %w", err)
+		}
+	}
 	return nil
 }
