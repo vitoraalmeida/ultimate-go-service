@@ -13,3 +13,11 @@ Existem diversos Handlers de terceiros (mux, routers) e podemos usar qualquer um
 que seja bem feito, pois a diferença é de nanosegundos
 
 Aqui será usado o httptreemux
+
+Idealmente, queremos que os handlers validem os dados que estão chegando na 
+requisição, invoquem a camada de negócio para processar os dados, retorne
+erros caso ocorram e lidem com o caso de tudo estar correto. Devemos retornar
+erros, não lidar com erros dentro do handler, pois assim não deixamos o usuário
+da nossa API lidar da forma que ele quer com os erros.
+
+
