@@ -23,25 +23,29 @@ type App struct {
 	// Dessa forma, um App é um App e não um ContextMux como ocorre com herança
 	*httptreemux.ContextMux
 	shutdown chan os.Signal
+	mw       []Middleware
 }
 
 // Cria e retorna uma instância de App
 // Usar semântica de ponteiro quando estamos lidando com uma API, com algo
 // que deve compartilhar estados e recursos
-func NewApp(shutdown chan os.Signal) *App {
+func NewApp(shutdown chan os.Signal, mw ...Middleware) *App {
 	// usando
 	return &App{
 		// httptreemux.NewContextMux() retorna um ponteiro para ContextMux
 		// NewContextMux retorna um mux que implementa http.Handler
 		ContextMux: httptreemux.NewContextMux(),
 		shutdown:   shutdown,
+		mw:         mw,
 	}
 }
 
 // Handle atribui um handler function para uma chamada de determindado método
 // em determinado endpoint, utilizando a lógica de roteamento do
 // httptreemux.ContextMux internamente.
-func (a *App) Handle(method string, path string, handler Handler) {
+func (a *App) Handle(method string, path string, handler Handler, mw ...Middleware) {
+	handler = wrapMiddleware(mw, handler)
+	handler = wrapMiddleware(a.mw, handler)
 	// é uma função anônima que obedece ao contrate de uma handlerFunc
 	// que o httptreemux usa para registrar para uma rota, porém por dentro
 	// o que é chamado é nosso Handle customizado que utiliza um contexto
@@ -60,8 +64,8 @@ func (a *App) Handle(method string, path string, handler Handler) {
 		// logs etc
 	}
 
-	// como h tem a assinatura que o ContextMux.Handler espera, podemos usar
+	// como h tem a assinatura que o ContextMux.Handle espera, podemos usar
 	// a lógica já implementada de roteamento do httptreemux, porém h possui
-	// aa mecânica que usa contexto que desejamos
+	// aa mecânica que usa contexto que desejamos internamente
 	a.ContextMux.Handle(method, path, h)
 }
