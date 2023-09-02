@@ -127,4 +127,4 @@ metrics-view-local:
 
 
 test-endpoint:
-	curl -il localhost:4000/debug/pprof
+	curl -il localhost:3000/test

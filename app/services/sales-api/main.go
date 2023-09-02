@@ -12,6 +12,7 @@ import (
 	"time"
 
 	"github.com/ardanlabs/conf/v3"
+	"github.com/ardanlabs/service/app/services/sales-api/handlers"
 	"github.com/vitoraalmeida/service/business/web/v1/debug"
 	"github.com/vitoraalmeida/service/foundation/logger"
 	"go.uber.org/zap"
@@ -138,10 +139,16 @@ func run(log *zap.SugaredLogger) error {
 	// SIGINT = Ctrl + c
 	signal.Notify(shutdown, syscall.SIGINT, syscall.SIGTERM)
 
+	// cria uma instâcia do nosso mux
+	apiMux := handlers.APIMux(handlers.APIMuxConfig{
+		Shutdown: shutdown,
+		Log:      log,
+	})
+
 	// cria uma instância de http.Server customizada com os valores de configuração
 	api := http.Server{
 		Addr:         cfg.Web.APIHost,
-		Handler:      nil,
+		Handler:      apiMux,
 		ReadTimeout:  cfg.Web.ReadTimeout,
 		WriteTimeout: cfg.Web.WriteTimeout,
 		IdleTimeout:  cfg.Web.IdleTimeout,
