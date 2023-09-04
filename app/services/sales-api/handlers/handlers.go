@@ -23,6 +23,7 @@ type APIMuxConfig struct {
 // o httptreemux.ContextMux implementa o http.Handler.
 func APIMux(cfg APIMuxConfig) *web.App {
 	// registramos o middleware de logs em toda a aplicação
+	// ou seja, a função
 	app := web.NewApp(cfg.Shutdown, mid.Logger(cfg.Log))
 
 	// Registra um handleFunc que irá prcessar requisições get em /test
