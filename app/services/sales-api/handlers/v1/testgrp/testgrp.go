@@ -2,7 +2,6 @@ package testgrp
 
 import (
 	"context"
-	"errors"
 	"math/rand"
 	"net/http"
 
@@ -19,7 +18,8 @@ func Test(ctx context.Context, w http.ResponseWriter, r *http.Request) error {
 	// lida com erros
 	// gera um erro fictício para testar o error handling
 	if n := rand.Intn(100); n%2 == 0 {
-		return errors.New("UNTRUSTED ERROR")
+		//return errors.New("UNTRUSTED ERROR")
+		panic("OOOOH NOOOO")
 	}
 
 	status := struct {
