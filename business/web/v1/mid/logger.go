@@ -28,12 +28,13 @@ func Logger(log *zap.SugaredLogger) web.Middleware {
 			log.Infow("request started", "trace_id", v.TraceID, "method", r.Method, "path", path,
 				"remoteaddr", r.RemoteAddr)
 
-			// executa de fato o handler específico da requisição
+			// chama a função que o mid de logger engloba
 			err := handler(ctx, w, r)
 
 			// loga o fim do request
 			log.Infow("request completed", "trace_id", v.TraceID, "method", r.Method, "path", path,
 				"remoteaddr", r.RemoteAddr, "statuscode", v.StatusCode, "since", time.Since(v.Now))
+
 			// retorna o erro para ser tratado por quem deve tratar
 			return err
 		}

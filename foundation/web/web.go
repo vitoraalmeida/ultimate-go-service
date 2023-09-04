@@ -2,9 +2,10 @@ package web
 
 import (
 	"context"
-	"fmt"
+	"errors"
 	"net/http"
 	"os"
+	"syscall"
 	"time"
 
 	"github.com/dimfeld/httptreemux/v5"
@@ -42,6 +43,12 @@ func NewApp(shutdown chan os.Signal, mw ...Middleware) *App {
 	}
 }
 
+// SignalShutdown usado para desligar a aplicação quando um problema de integridade
+// for identificado
+func (a *App) SignalShutdown() {
+	a.shutdown <- syscall.SIGTERM
+}
+
 // Handle atribui um handler function para uma chamada de determindado método
 // em determinado endpoint, utilizando a lógica de roteamento do
 // httptreemux.ContextMux internamente.
@@ -76,9 +83,15 @@ func (a *App) Handle(method string, path string, handler Handler, mw ...Middlewa
 		ctx := context.WithValue(r.Context(), key, &v)
 
 		// chama a cadeia de funções
+		// se temos um erro aqui quer dizer que nosso handler de erros retornou
+		// ou outra chamada entre o handler de erros e o handler base ocorreu
+		// de toda forma, é sério
 		if err := handler(ctx, w, r); err != nil {
-			fmt.Println(err)
-			return
+			// se foi um erro de shutdown, devemos enviar o sinal para finalizar
+			if validateShutdown(err) {
+				a.SignalShutdown()
+				return
+			}
 		}
 
 		// pode executar qualquer código depois do handler
@@ -89,4 +102,36 @@ func (a *App) Handle(method string, path string, handler Handler, mw ...Middlewa
 	// a lógica já implementada de roteamento do httptreemux, porém h possui
 	// aa mecânica que usa contexto que desejamos internamente
 	a.ContextMux.Handle(method, path, h)
+}
+
+// validateShutdown valida o erro contra situação que não são garantidas de
+// realmente ter que desligar o sistema, pois são erros que não aconteceram
+// dentro do servidor
+func validateShutdown(err error) bool {
+
+	// Ignorar erros syscall.EPIPE e syscall.ECONNRESET os quais ocorrem quando
+	// uma operação de escrita acontece no http.ResponseWriter que foi desconectada
+	// pelo cliente (então não há para onde mandar/escrever)
+	// https://blog.cloudflare.com/the-complete-guide-to-golang-net-http-timeouts/
+	// https://gosamples.dev/broken-pipe/
+	// https://gosamples.dev/connection-reset-by-peer/
+
+	switch {
+	case errors.Is(err, syscall.EPIPE):
+
+		// Normalmente ocorre quando tentamos escrever um TCP RST para encerrar
+		// a conexão num stream em que a outra
+		// ponta já fechou a conexão (Enviou o RST, e quando enviamos do nosso lado
+		// ocorre o erro
+		return false
+
+	case errors.Is(err, syscall.ECONNRESET):
+
+		// Ocorre quando lemos a conexão depois de enviar um RST (para confirmar
+		// que o cliente enviou o FIN), porém o cliente desligou de forma
+		// inesperada e enviou um RST ao invés do FIN.
+		return false
+	}
+
+	return true
 }
