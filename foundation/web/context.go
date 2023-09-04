@@ -1,3 +1,4 @@
+// Definição do contexto que será passado em cada requisição
 package web
 
 import (
@@ -7,16 +8,19 @@ import (
 
 type ctxKey int
 
+// identificador para os valores que ficam no context
+// é a chave que passamod para o objeto do pacote context
+// para recuperar o valor que inserimos
 const key ctxKey = 1
 
-// Values represent state for each request.
+// Values reprensenta o estado de cada requisição
 type Values struct {
-	TraceID    string
+	TraceID    string // um identificador unico para aquela requisição
 	Now        time.Time
 	StatusCode int
 }
 
-// GetValues returns the values from the context.
+// GetValues retorna o valor atual do contexto
 func GetValues(ctx context.Context) *Values {
 	v, ok := ctx.Value(key).(*Values)
 	if !ok {
@@ -29,7 +33,6 @@ func GetValues(ctx context.Context) *Values {
 	return v
 }
 
-// GetTraceID returns the trace id from the context.
 func GetTraceID(ctx context.Context) string {
 	v, ok := ctx.Value(key).(*Values)
 	if !ok {
@@ -38,7 +41,6 @@ func GetTraceID(ctx context.Context) string {
 	return v.TraceID
 }
 
-// GetTime returns the time from the context.
 func GetTime(ctx context.Context) time.Time {
 	v, ok := ctx.Value(key).(*Values)
 	if !ok {
@@ -47,7 +49,6 @@ func GetTime(ctx context.Context) time.Time {
 	return v.Now
 }
 
-// SetStatusCode sets the status code back into the context.
 func SetStatusCode(ctx context.Context, statusCode int) {
 	v, ok := ctx.Value(key).(*Values)
 	if !ok {

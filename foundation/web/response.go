@@ -6,8 +6,9 @@ import (
 	"net/http"
 )
 
-// Respond converts a Go value to JSON and sends it to the client.
+// Respond convert um valor Go em JSON e responde a requisição ao cliente
 func Respond(ctx context.Context, w http.ResponseWriter, data any, statusCode int) error {
+	// armazena o status code da requisição no contexto para que possa ser utilizado pelos middlewares
 	SetStatusCode(ctx, statusCode)
 
 	if statusCode == http.StatusNoContent {

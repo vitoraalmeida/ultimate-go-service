@@ -13,13 +13,14 @@ func Test(ctx context.Context, w http.ResponseWriter, r *http.Request) error {
 	// handler devem
 	// validar os dados
 	// processar na camada de business
-	// retornar erros
-	// lidar com a resposta OK
+	// lidar com erros
+
 	status := struct {
 		Status string
 	}{
 		Status: "OK",
 	}
 
+	// lidar com a resposta OK
 	return web.Respond(ctx, w, status, http.StatusOK)
 }

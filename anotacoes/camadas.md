@@ -21,8 +21,8 @@ app/ ----------------- referente à aplicação que será executada
              |
              +-- sales-admin
 
-business/ --------------------- regras de negócio
-|
+business/ --------------------- regras de negócio e capacidades que são decisão
+|                               do projeto específico
 +---+- core/
     |
     +- cview/
@@ -31,7 +31,8 @@ foundation/ -------------------- stdlib do projeto
      +- docker                   não estão estritamente ligados
      |- vault                    às regras de negócio
      +- logger                   eventualmente poderiam estar
-                                 em seus próprios repos
+     |- web                      em seus próprios repos. Comportamento geral
+                                 
 
 vendor   --------------- código de dependências de terceiros
 
