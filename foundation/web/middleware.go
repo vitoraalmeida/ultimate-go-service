@@ -18,6 +18,8 @@ func wrapMiddleware(mw []Middleware, handler Handler) Handler {
 	// Para que os middlewares sejam executados na ordem que forem registrados,
 	// devemos fazer com que o primeiro middleware registrado seja a camada
 	// mais externa, então iteramos de trás para frente na lista
+	// assim, a função que lida com a request é a última a chamada e a
+	// primeira a retornar
 	for i := len(mw) - 1; i >= 0; i-- {
 		h := mw[i]
 		if h != nil {

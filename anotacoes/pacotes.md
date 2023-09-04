@@ -37,7 +37,8 @@ saem.
 
 Não queremos pacotes que "contenham" (utils, helpersm type system) pois acarreta na 
 chance de que muitos outros pacotes dependam dele e mudanças nele geram muitos efeitos 
-colaterais.
+colaterais. Na camada de foundation nunca devemos ter containers, mas é possível
+ter na camada de business se for bem direcionado e específico.
 
 Um cheiro de que um pacote é um container é quando não faz sentido ter um 
 arquivo nome-do-pacote.go dentro do pacote

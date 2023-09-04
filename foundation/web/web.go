@@ -5,8 +5,10 @@ import (
 	"fmt"
 	"net/http"
 	"os"
+	"time"
 
 	"github.com/dimfeld/httptreemux/v5"
+	"github.com/google/uuid"
 )
 
 // Tipo que lida com http requests no nosso framework.
@@ -44,7 +46,10 @@ func NewApp(shutdown chan os.Signal, mw ...Middleware) *App {
 // em determinado endpoint, utilizando a lógica de roteamento do
 // httptreemux.ContextMux internamente.
 func (a *App) Handle(method string, path string, handler Handler, mw ...Middleware) {
+	// se houver middlewares específico para a rota, engloba
 	handler = wrapMiddleware(mw, handler)
+	// Mas os middlewares para a aplicação inteira devem ser chamados
+	// primeiro, então irão ficar na camada mais externa
 	handler = wrapMiddleware(a.mw, handler)
 	// é uma função anônima que obedece ao contrate de uma handlerFunc
 	// que o httptreemux usa para registrar para uma rota, porém por dentro
@@ -53,9 +58,14 @@ func (a *App) Handle(method string, path string, handler Handler, mw ...Middlewa
 	h := func(w http.ResponseWriter, r *http.Request) {
 		// pode executar qualquer código antes de chamar o handler final
 		// ex.: verificar autenticação, criar um log da requisição etc
+		v := Values{
+			TraceID: uuid.NewString(),
+			Now:     time.Now().UTC(),
+		}
+		ctx := context.WithValue(r.Context(), key, &v)
 
-		// chama
-		if err := handler(r.Context(), w, r); err != nil {
+		// chama a cadeia de funções
+		if err := handler(ctx, w, r); err != nil {
 			fmt.Println(err)
 			return
 		}
