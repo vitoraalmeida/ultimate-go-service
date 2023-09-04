@@ -6,6 +6,7 @@ import (
 	"net/http"
 	"runtime/debug"
 
+	"github.com/vitoraalmeida/service/business/web/metrics"
 	"github.com/vitoraalmeida/service/foundation/web"
 )
 
@@ -29,6 +30,9 @@ func Panics() web.Middleware {
 					// funções anônimas são closures (captam o escopo externo ao
 					// corpo da função)
 					err = fmt.Errorf("PANIC [%v] TRACE[%s]", rec, string(trace))
+					// chama o pacote de metricas para incrementar o contador de
+					// panics
+					metrics.AddPanics(ctx)
 				}
 			}()
 

@@ -79,7 +79,7 @@ func (a *App) Handle(method string, path string, handler Handler, mw ...Middlewa
 			Now: time.Now().UTC(),
 		}
 		// cria o contexto reaproveitando o contexto do request e adicionando nosso
-		// dado para os logs
+		// dado para os logs (primeiro middlware)
 		ctx := context.WithValue(r.Context(), key, &v)
 
 		// chama a cadeia de funções
