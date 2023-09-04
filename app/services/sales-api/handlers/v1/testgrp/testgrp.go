@@ -16,7 +16,7 @@ func Test(ctx context.Context, w http.ResponseWriter, r *http.Request) error {
 	// validar os dados
 	// processar na camada de business
 
-	// lidar com erros
+	// lida com erros
 	// gera um erro fictício para testar o error handling
 	if n := rand.Intn(100); n%2 == 0 {
 		return errors.New("UNTRUSTED ERROR")
