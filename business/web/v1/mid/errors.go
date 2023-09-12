@@ -4,6 +4,7 @@ import (
 	"context"
 	"net/http"
 
+	"github.com/vitoraalmeida/service/business/web/auth"
 	v1 "github.com/vitoraalmeida/service/business/web/v1"
 	"github.com/vitoraalmeida/service/foundation/web"
 	"go.uber.org/zap"
@@ -32,6 +33,13 @@ func Errors(log *zap.SugaredLogger) web.Middleware {
 						Error: reqErr.Error(),
 					}
 					status = reqErr.Status
+
+				case auth.IsAuthError(err):
+					er = v1.ErrorResponse{
+						Error: http.StatusText(http.StatusUnauthorized),
+					}
+					status = http.StatusUnauthorized
+
 				// se for um erro inesperado, criamos o erro de resposta como
 				// internalServerError (500)
 				default:
