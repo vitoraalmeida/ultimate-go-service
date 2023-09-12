@@ -28,6 +28,8 @@ type Claims struct {
 // KeyLookup declara um conjunto de metodos do comportamento de buscar por chaves
 // publicas e privadas para uso com JWT. O retorno pode ser uma string codificada
 // em PEM ou JWS
+// Interface usada para que possamos ter um keystore que possa ser implementado
+// de diferentes formas (em memória, banco de dados etc)
 type KeyLookup interface {
 	PrivateKey(kid string) (key string, err error)
 	PublicKey(kid string) (key string, err error)
