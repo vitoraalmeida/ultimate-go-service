@@ -14,9 +14,9 @@ type QueryFilter struct {
 	// utiliza ponteiros para dar a possibilidade de deixar um ou mais campos vazios (nil)
 	// e podermos passar o objeto inteiro para que seja utilizado com base nos campos
 	// que não forem nulos
-	ID               *uuid.UUID    `validate:"omitempty,uuid4"` // tags para validação do pacote validator go-playground/validator/v10"
-	Name             *string       `validate:"omitempty,min=3"`
-	Email            *mail.Address `validate:"omitempty,email"`
+	ID               *uuid.UUID    `validate:"omitempty"`       // pode não ter regra específica de validação, pois já estamos usando um tipo específico UUID
+	Name             *string       `validate:"omitempty,min=3"` // tags para validação do pacote validator go-playground/validator/v10"
+	Email            *mail.Address `validate:"omitempty"`       // pode não ter regra específica de validação, pois já estamos usando um tipo específico UUID
 	StartCreatedDate *time.Time    `validate:"omitempty"`
 	EndCreatedDate   *time.Time    `validate:"omitempty"`
 }
