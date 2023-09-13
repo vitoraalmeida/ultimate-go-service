@@ -21,7 +21,7 @@ type QueryFilter struct {
 	EndCreatedDate   *time.Time    `validate:"omitempty"`
 }
 
-// Validate checa se o dado está limpo
+// Validate checa se o dado está no formato correto
 func (qf *QueryFilter) Validate() error {
 	if err := validate.Check(qf); err != nil {
 		return fmt.Errorf("validate: %w", err)

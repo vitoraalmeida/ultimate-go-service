@@ -41,6 +41,7 @@ func NewBy(field string, direction string) By {
 
 // Parse constrói um valor By fazendo um parsing de uma string na forma "field,direction"
 func Parse(r *http.Request, defaultOrder By) (By, error) {
+	// busca infos de como o usuário solicitou a filtragem/ordenação
 	v := r.URL.Query().Get("orderBy")
 
 	if v == "" {
@@ -52,6 +53,7 @@ func Parse(r *http.Request, defaultOrder By) (By, error) {
 	var by By
 	switch len(orderParts) {
 	case 1:
+		// se não foi passado uma direção, usamos ASC por padrão
 		by = NewBy(strings.Trim(orderParts[0], " "), ASC)
 	case 2:
 		by = NewBy(strings.Trim(orderParts[0], " "), strings.Trim(orderParts[1], " "))

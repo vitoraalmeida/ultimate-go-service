@@ -1,4 +1,4 @@
-// Package validate contém o suporte para validade models
+// Package validate contém o suporte para validar models
 package validate
 
 import (
@@ -39,18 +39,23 @@ func init() {
 	})
 }
 
-// Check validates the provided model against it's declared tags.
+// Check valida o modelo passado de acordo com as tags declaradas nos cmapos do struct
+// exemplo: adicionamos a tag min=3, vai verificar se o valor que foi passado
+// obedece à regra de ter pelo menos 3 caracteres
 func Check(val any) error {
 	if err := validate.Struct(val); err != nil {
 
-		// Use a type assertion to get the real error value.
+		// Usa type assertion para buscar o valor real do erro
 		verrors, ok := err.(validator.ValidationErrors)
 		if !ok {
 			return err
 		}
 
+		// quando retornarmos, o middleware de erros checa se o valor é do tipo FieldErrors
+		// e aí trabalha em cima dessa informação
 		var fields FieldErrors
 		for _, verror := range verrors {
+			// constrói os erros que definimos com base no erro retornado pela validação
 			field := FieldError{
 				Field: verror.Field(),
 				Err:   verror.Translate(translator),
