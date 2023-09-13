@@ -14,4 +14,4 @@ tokens JWT possuem 3 partes
 
 header: infos sobre como processar o token 
 payload: dados que serão usados para autenticar/autorizar
-signature: 
+signature: hash gerado a partir dos dados do token e de uma chave publica que gerou o token 
