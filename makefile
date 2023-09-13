@@ -56,8 +56,8 @@ dev-up-local:
 		--image $(KIND) \
 		--name $(KIND_CLUSTER) \
 		--config zarf/k8s/dev/kind-config.yaml # definição do cluster
-
 	kubectl wait --timeout=120s --namespace=local-path-storage --for=condition=Available deployment/local-path-provisioner
+	kind load docker-image $(POSTGRES) --name $(KIND_CLUSTER)
 
 
 dev-up: dev-up-local
@@ -78,6 +78,8 @@ dev-load:
 # substituindo o que for necessário e passa como argumento
 # para o kubectl apply
 dev-apply:
+	kustomize build zarf/k8s/dev/database | kubectl apply -f -
+	kubectl rollout status --namespace=$(NAMESPACE) --watch --timeout=120s sts/database
 	kustomize build zarf/k8s/dev/sales | kubectl apply -f -
 	kubectl wait pods --namespace=$(NAMESPACE) --selector app=$(APP) --for=condition=Ready
 # ------------------------------------------------------------------------------
@@ -148,7 +150,8 @@ readiness-local:
 readiness:
 	curl -il http://$(SERVICE_NAME).$(NAMESPACE).svc.cluster.local:4000/debug/readiness
 
-
+pgcli-local:
+	pgcli postgresql://postgres:postgres@localhost
 # token de exemplo gerado com a mesma chave PEM em zark/keys
 # ROLE USER: eyJhbGciOiJSUzI1NiIsImtpZCI6IjU0YmIyMTY1LTcxZTEtNDFhNi1hZjNlLTdkYTRhMGUxZTJjMSIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzZXJ2aWNlIHByb2plY3QiLCJzdWIiOiIxMjM0NTY3OCIsImV4cCI6MTcyNjE0ODkzNywiaWF0IjoxNjk0NjEyOTM3LCJSb2xlcyI6WyJVU0VSIl19.qGaka14oavnAbjtcAlGD3Q8orVtRdHFlfUa7LBkC9d3BIKoYkcqav-jnchO-IsaJ27wJXJbS5uwjuBqfpM7bkTJxvYGUIDx7jI3Xp1zmGe0n3pbYJt5nSnucXEi-tCaoU4BhzLAP_f3WV4EeIN9xHY3RTHutbOTm-IdIpln627qIEDrHO1USRBVIZpBLHpaNC7DrlKeCCbPIdh8FfrWFHGUV1SbloxLBfh3RYWzy8swI1LTkVOL6BOLX0Z32nWcSJdpYNH1DmzM65ecI_NaiusoLX9F4QwKyd1WP74ULUoOhghr2zUyJVGPhIXdpd5QEWoBj4zSgCRR0yXqzHSwz_g
 # ROLE ADMIN: eyJhbGciOiJSUzI1NiIsImtpZCI6IjU0YmIyMTY1LTcxZTEtNDFhNi1hZjNlLTdkYTRhMGUxZTJjMSIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzZXJ2aWNlIHByb2plY3QiLCJzdWIiOiIxMjM0NTY3OCIsImV4cCI6MTcyNjE0OTA5NSwiaWF0IjoxNjk0NjEzMDk1LCJSb2xlcyI6WyJBRE1JTiJdfQ.G83ASVA98mTSBgPm4QDzEI5Ii0o36fOHNfjlPl01zaqIcteqhRctBa5APxgQWvRmNRB8lG57yfT8_uDFOpH4g6NHVpu1k1OrXbw7chGOIEr6yxlKKzo8T5zOneiNlmBH252f2BCAHio-Fpp-hRl7S3AfXBkAtrwXq0mlIX3gII_BfRCpIqYPrXCpNun9wC3478iReQEMNDf65n2NmexO6q7g70iTOPT1dNZd_iHoaPq7IbsC5OVEY2JX1TcKl59LGwfV1fQsiHb4xgS5xoJsPCpAU7A-6fi4tcYs3WltIzXqH_kogZxpM9yQr3oxvftXaJ2NlqAabECMkSwqCwVHgQ 
