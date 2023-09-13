@@ -4,6 +4,7 @@ import (
 	"context"
 	"net/http"
 
+	"github.com/vitoraalmeida/service/business/sys/validate"
 	"github.com/vitoraalmeida/service/business/web/auth"
 	v1 "github.com/vitoraalmeida/service/business/web/v1"
 	"github.com/vitoraalmeida/service/foundation/web"
@@ -24,9 +25,17 @@ func Errors(log *zap.SugaredLogger) web.Middleware {
 				var er v1.ErrorResponse
 				var status int
 
-				switch {
 				// Se for um erro conhecido, buscamos esse erro e criamos um
 				// erro de resposta e definimos o status code da resposta
+				switch {
+				// erros de validação
+				case validate.IsFieldErrors(err):
+					fieldErrors := validate.GetFieldErrors(err)
+					er = v1.ErrorResponse{
+						Error:  "data validation error",
+						Fields: fieldErrors.Fields(),
+					}
+					status = http.StatusBadRequest
 				case v1.IsRequestError(err):
 					reqErr := v1.GetRequestError(err)
 					er = v1.ErrorResponse{

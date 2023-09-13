@@ -11,10 +11,11 @@ import (
 	"time"
 
 	"github.com/google/uuid"
+	"github.com/vitoraalmeida/service/business/data/order"
 	"golang.org/x/crypto/bcrypt"
 )
 
-// Set of error variables for CRUD operations.
+// Conjunto de erros para operações CRUD
 var (
 	ErrNotFound              = errors.New("user not found")
 	ErrUniqueEmail           = errors.New("email is not unique")
@@ -27,7 +28,7 @@ type Storer interface {
 	Create(ctx context.Context, usr User) error
 	Update(ctx context.Context, usr User) error
 	Delete(ctx context.Context, usr User) error
-	Query(ctx context.Context, filter QueryFilter, pageNumber int, rowsPerPage int) ([]User, error)
+	Query(ctx context.Context, filter QueryFilter, orderBy order.By, pageNumber int, rowsPerPage int) ([]User, error)
 	Count(ctx context.Context, filter QueryFilter) (int, error)
 	QueryByID(ctx context.Context, userID uuid.UUID) (User, error)
 	QueryByIDs(ctx context.Context, userID []uuid.UUID) ([]User, error)
@@ -71,6 +72,7 @@ func (c *Core) Create(ctx context.Context, nu NewUser) (User, error) {
 		DateUpdated:  now,
 	}
 
+	// chama a criação de fato na implementação de interação com o banco de dados usada
 	if err := c.storer.Create(ctx, usr); err != nil {
 		return User{}, fmt.Errorf("create: %w", err)
 	}
@@ -80,6 +82,7 @@ func (c *Core) Create(ctx context.Context, nu NewUser) (User, error) {
 
 // Update substitui a instância do modelo User no banco de dados
 func (c *Core) Update(ctx context.Context, usr User, uu UpdateUser) (User, error) {
+	// atualiza apenas os dados que foram passados, caso contrário usa o antigo
 	if uu.Name != nil {
 		usr.Name = *uu.Name
 	}
@@ -121,8 +124,12 @@ func (c *Core) Delete(ctx context.Context, usr User) error {
 }
 
 // Query entrega uma lista de usuários no banco de dados
-func (c *Core) Query(ctx context.Context, filter QueryFilter, pageNumber int, rowsPerPage int) ([]User, error) {
-	users, err := c.storer.Query(ctx, filter, pageNumber, rowsPerPage)
+// Quando retornamos coleções, devemos pensar numa forma de otimizar para casos
+// em que existem muitos registros, para isso usamos filtros, ordenações e paginação
+// para evitar que a memória seja sobreutilizada
+func (c *Core) Query(ctx context.Context, filter QueryFilter, orderBy order.By, pageNumber int, rowsPerPage int) ([]User, error) {
+	// logica de ordenação, paginação e filtros implementada na interação concreta com o armazenamento escolhido
+	users, err := c.storer.Query(ctx, filter, orderBy, pageNumber, rowsPerPage)
 	if err != nil {
 		return nil, fmt.Errorf("query: %w", err)
 	}
@@ -171,6 +178,8 @@ func (c *Core) QueryByEmail(ctx context.Context, email mail.Address) (User, erro
 // Caso seja encontrado e a senha seja verificada, retorna um Claims do JWT para
 // que um token possa ser gerado para autenticação futura.
 func (c *Core) Authenticate(ctx context.Context, email mail.Address, password string) (User, error) {
+	// usamos o método que está definido no user.Core, pois ele possui (ou pode possuir)
+	// regras de negócio que não devemos evitar chamando o storer diretamente (c.storer)
 	usr, err := c.QueryByEmail(ctx, email)
 	if err != nil {
 		return User{}, fmt.Errorf("query: email[%s]: %w", email, err)
