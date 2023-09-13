@@ -46,6 +46,27 @@ spec:
         - name: sales-api-debug
           containerPort: 4000
 
+
+        readinessProbe: # readiness probes indicam que o serviço está pronto para aceitar tráfego
+          httpGet:
+            path: /debug/readiness
+            port: 4000
+          initialDelaySeconds: 2
+          periodSeconds: 15
+          timeoutSeconds: 5
+          successThreshold: 1
+          failureThreshold: 2
+
+        livenessProbe: # liveness probes indicam se o serviço está executando ou não
+          httpGet:
+            path: /debug/liveness
+            port: 4000
+          initialDelaySeconds: 2
+          periodSeconds: 30
+          timeoutSeconds: 5
+          successThreshold: 1
+          failureThreshold: 2
+
         # GOMAXPROCS vai ser igual ao valor definido no limits para esse deploy
         env:
         - name: GOMAXPROCS
@@ -55,7 +76,23 @@ spec:
               # 1500m cpu -> 1.5 -> GOMAXPROCS = 2
               resource: limits.cpu
 
-                
+        # variavéis que são usadas nos endpoints de health check
+        - name: KUBERNETES_NAMESPACE
+          valueFrom:
+            fieldRef:
+              fieldPath: metadata.namespace
+        - name: KUBERNETES_NAME
+          valueFrom:
+            fieldRef:
+              fieldPath: metadata.name
+        - name: KUBERNETES_POD_IP
+          valueFrom:
+            fieldRef:
+              fieldPath: status.podIP
+        - name: KUBERNETES_NODE_NAME
+          valueFrom:
+            fieldRef:
+              fieldPath: spec.nodeName 
 ---
 # Services permitem expor serviços, dns, portas, clusterIP...
 # Configurações específicas devem ser adicionadas como patches kustomize

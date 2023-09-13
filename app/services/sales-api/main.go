@@ -153,7 +153,7 @@ func run(log *zap.SugaredLogger) error {
 	// caso a goroutine principal morra, não tem problema esta fica orfã, pois
 	// ela apenas realiza leitura
 	go func() {
-		if err := http.ListenAndServe(cfg.Web.DebugHost, debug.StandardLibraryMux()); err != nil {
+		if err := http.ListenAndServe(cfg.Web.DebugHost, debug.Mux(build, log)); err != nil {
 			log.Errorw("shutdown", "status", "debug v1 router closed", "host", cfg.Web.DebugHost, "ERROR", err)
 		}
 	}()
