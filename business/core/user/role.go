@@ -1,8 +1,10 @@
+// Define as roles possíveis no sistema para um usuário
 package user
 
 import "errors"
 
 // Papeis/responsabilidades possíveis para um usuário
+// Esse padrão é o mais próximo que podemos chegar de enums em go
 var (
 	RoleAdmin = Role{"ADMIN"}
 	RoleUser  = Role{"USER"}
@@ -16,10 +18,13 @@ var roles = map[string]Role{
 
 // Role representa um papel/responsabilidade
 type Role struct {
-	name string
+	name string // não pode ser modificado/escrito/lido = não exportado
 }
 
 // ParseRole recebe um texto e converte para uma role existente
+// deve ser chamada na camada de aplicação, não na camada busines. Validação
+// não deve ser feita em business
+// A camada de aplicação pode aceitar strings e aqui é feita a conversão
 func ParseRole(value string) (Role, error) {
 	role, exists := roles[value]
 	if !exists {
@@ -29,7 +34,7 @@ func ParseRole(value string) (Role, error) {
 	return role, nil
 }
 
-// MustParseRole chama panic() caso ParseRole retorne erro
+// MustParseRole chama panic() caso ParseRole retorne erro -> usado em testes
 func MustParseRole(value string) Role {
 	role, err := ParseRole(value)
 	if err != nil {

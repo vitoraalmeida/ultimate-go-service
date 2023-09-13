@@ -23,6 +23,8 @@ var ErrForbidden = errors.New("attempted action is not allowed")
 type Claims struct {
 	jwt.RegisteredClaims
 	Roles []user.Role `json:"roles"`
+	// Roles são definidos no pacote user, pois são usuários que terão roles no
+	// sistema
 }
 
 // KeyLookup declara um conjunto de metodos do comportamento de buscar por chaves
@@ -105,6 +107,7 @@ func (a *Auth) Authenticate(ctx context.Context, bearerToken string) (Claims, er
 	}
 
 	// Faz o parsing do token em um claims
+	// Unverified pois quem fará a verificação é o OPA
 	var claims Claims
 	token, _, err := a.parser.ParseUnverified(parts[1], &claims)
 	if err != nil {
@@ -164,6 +167,9 @@ func (a *Auth) Authorize(ctx context.Context, claims Claims, rule string) error 
 // publicKeyLookup busca a publickey relativa ao kid passado
 func (a *Auth) publicKeyLookup(kid string) (string, error) {
 	// verifica primeiro no cache
+	// utiliza uma função literal que é executada imediatamente para podermos
+	// utilizar a lógia de fazer o lock e unlock do cache de forma limpa usando
+	// o defer e de forma que fique no escopo da função
 	pem, err := func() (string, error) {
 		a.mu.RLock()
 		defer a.mu.RUnlock()
@@ -178,11 +184,14 @@ func (a *Auth) publicKeyLookup(kid string) (string, error) {
 		return pem, nil
 	}
 
+	// se não achamos no cache, procuramos no armazenamento (que pode ser remoto
+	// então por isso pode ser legal usar o cache
 	pem, err = a.keyLookup.PublicKey(kid)
 	if err != nil {
 		return "", fmt.Errorf("fetching public key: %w", err)
 	}
 
+	// escreve no cache
 	a.mu.Lock()
 	defer a.mu.Unlock()
 	a.cache[kid] = pem
