@@ -1,4 +1,4 @@
-// Package order provides support for describing the ordering of data.
+// Package order provê suporte para descrever dados de ordenação
 package order
 
 import (
