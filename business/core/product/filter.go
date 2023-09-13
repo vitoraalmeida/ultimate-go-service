@@ -7,7 +7,7 @@ import (
 	"github.com/vitoraalmeida/service/business/sys/validate"
 )
 
-// QueryFilter agrupa os campos disponíveis pelos quais uma consulta pode ser filtrada
+// QueryFilter agrupa os campos disponíveis pelos quais uma consulta pode ser filtrada. É passado por query params numa url
 type QueryFilter struct {
 	// utiliza ponteiros para dar a possibilidade de deixar um ou mais campos vazios (nil)
 	// e podermos passar o objeto inteiro para que seja utilizado com base nos campos

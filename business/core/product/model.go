@@ -14,7 +14,7 @@ type Product struct {
 	Quantity    int
 	Sold        int
 	Revenue     int
-	UserID      uuid.UUID
+	UserID      uuid.UUID // indica uma relação com User. O usuário que registrou esse produto
 	DateCreated time.Time
 	DateUpdated time.Time
 }

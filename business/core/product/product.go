@@ -37,7 +37,7 @@ type Core struct {
 	// Abstrai qual é a implementação de fato que vai gerenciar a interção
 	// com o armazenamento de usuário
 	log     *zap.SugaredLogger
-	usrCore *user.Core
+	usrCore *user.Core // Usamos a api de Users, pois há uma relação entre Produtos e usuários
 	storer  Storer
 }
 
@@ -45,7 +45,7 @@ type Core struct {
 func NewCore(log *zap.SugaredLogger, usrCore *user.Core, storer Storer) *Core {
 	core := Core{
 		log:     log,
-		usrCore: usrCore,
+		usrCore: usrCore, // usrCore pode ser usado aqui, pois o modelo de usuário é usado no modelo de product
 		storer:  storer,
 	}
 

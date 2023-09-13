@@ -98,17 +98,17 @@ Por isso é interessante que não façamos o relatório simplesmente fazendo joi
 de tabelas do banco, pois eventualmente podemos precisar que estejam em bancos
 separados. 
 
-#### Event driven
-
-Para que a tabela de SalesUsers seja populada, podemos usar a estratégia de emitir
-eventos quando uma nova compra for inserida, executando a logica de buscar o
-usuário relacionado, fazer a união dos dados necessários e inserir no SalesUsers
+    Event driven
+    Para que a tabela de SalesUsers seja populada, podemos usar a estratégia de emitir
+    eventos quando uma nova compra for inserida, executando a logica de buscar o
+    usuário relacionado, fazer a união dos dados necessários e inserir no SalesUsers
 
 
 Para manter essa consistência e a ideia de cada domínio estar separado e evitar
 joins (acoplamento) e ao mesmo tempo não precisar de um servidor de banco de
 dados para cada domínio, podemos usar o mesmo banco, com tabelas diferentes
-e para nosso domínio SalesUsers usar Views do SGDB (DBMS)
+e para nosso domínio SalesUsers usar Views ( no pacote cview = core view), 
+que podemos usar para relatórios, agregações etc
 
 ```
                             External input
@@ -144,3 +144,5 @@ nelas, mas para isso precisamos reforçar as validações na camada de aplicaç�
 Além disso, para mitigar a falta de validações fora da camada de aplicação, usamos
 o sistema de tipos e métodos "parse" para garantir que os dados que entram são
 do tipo que queremos
+
+### 
