@@ -13,7 +13,9 @@ import (
 
 	"github.com/ardanlabs/conf/v3"
 	"github.com/vitoraalmeida/service/app/services/sales-api/handlers"
+	"github.com/vitoraalmeida/service/business/web/auth"
 	"github.com/vitoraalmeida/service/business/web/v1/debug"
+	"github.com/vitoraalmeida/service/foundation/keystore"
 	"github.com/vitoraalmeida/service/foundation/logger"
 	"go.uber.org/zap"
 )
@@ -78,6 +80,12 @@ func run(log *zap.SugaredLogger) error {
 			//adicionar mask no fim da tag de configuração caso queira que apareça, mas mascarado
 			//DebugHost       string        `conf:"default:0.0.0.0:4000,mask"`
 		}
+		// informações para lidar com autenticação
+		Auth struct {
+			KeysFolder string `conf:"default:zarf/keys/"`                           // informações com keys definidas a priori
+			ActiveKID  string `conf:"default:54bb2165-71e1-41a6-af3e-7da4a0e1e2c1"` // nome da key PEM que será pré-definida
+			Issuer     string `conf:"default:service project"`                      // define quem é o criador do token
+		}
 	}{
 		Version: conf.Version{
 			Build: build,
@@ -115,6 +123,28 @@ func run(log *zap.SugaredLogger) error {
 	log.Infow("startup", "config", out)
 
 	// -------------------------------------------------------------------------
+	// Inicia suporte à autenticação
+
+	log.Infow("startup", "status", "initializing authentication support")
+
+	// Criação do armazenamento de chaves em memória usando chaves criadas anteriormente
+	ks, err := keystore.NewFS(os.DirFS(cfg.Auth.KeysFolder))
+	if err != nil {
+		return fmt.Errorf("reading keys: %w", err)
+	}
+
+	authCfg := auth.Config{
+		Log:       log,
+		KeyLookup: ks,
+	}
+
+	// objeto que armazena informações para lidar com autenticação/autorização
+	auth, err := auth.New(authCfg)
+	if err != nil {
+		return fmt.Errorf("constructing auth: %w", err)
+	}
+
+	// -------------------------------------------------------------------------
 	// Inicia serviço de debug
 
 	log.Infow("startup", "status", "debug v1 router started", "host", cfg.Web.DebugHost)
@@ -143,6 +173,7 @@ func run(log *zap.SugaredLogger) error {
 	apiMux := handlers.APIMux(handlers.APIMuxConfig{
 		Shutdown: shutdown,
 		Log:      log,
+		Auth:     auth,
 	})
 
 	// cria uma instância de http.Server customizada com os valores de configuração

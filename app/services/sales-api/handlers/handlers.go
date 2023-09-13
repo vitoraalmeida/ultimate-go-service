@@ -5,6 +5,7 @@ import (
 	"os"
 
 	"github.com/vitoraalmeida/service/app/services/sales-api/handlers/v1/testgrp"
+	"github.com/vitoraalmeida/service/business/web/auth"
 	"github.com/vitoraalmeida/service/business/web/v1/mid"
 	"github.com/vitoraalmeida/service/foundation/web"
 	"go.uber.org/zap"
@@ -14,6 +15,7 @@ import (
 type APIMuxConfig struct {
 	Shutdown chan os.Signal
 	Log      *zap.SugaredLogger
+	Auth     *auth.Auth // Objeto que armazena informções referentes à autenticação
 }
 
 // APIMux contrói um mux ( que implementa http.Handler) com todas as rotas
@@ -30,6 +32,8 @@ func APIMux(cfg APIMuxConfig) *web.App {
 
 	// Registra um handleFunc que irá prcessar requisições get em /test
 	app.Handle(http.MethodGet, "/test", testgrp.Test)
+	// Registra handler para testar autenticação
+	app.Handle(http.MethodGet, "/test/auth", testgrp.Test, mid.Authenticate(cfg.Auth), mid.Authorize(cfg.Auth, auth.RuleAdminOnly))
 
 	// o objeto App implementa a internface http.Handler que é necessário para
 	// construir um http.Server
