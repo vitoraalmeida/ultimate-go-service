@@ -4,6 +4,7 @@ import (
 	"net/http"
 	"os"
 
+	"github.com/jmoiron/sqlx"
 	"github.com/vitoraalmeida/service/app/services/sales-api/handlers/v1/testgrp"
 	"github.com/vitoraalmeida/service/business/web/auth"
 	"github.com/vitoraalmeida/service/business/web/v1/mid"
@@ -16,6 +17,7 @@ type APIMuxConfig struct {
 	Shutdown chan os.Signal
 	Log      *zap.SugaredLogger
 	Auth     *auth.Auth // Objeto que armazena informções referentes à autenticação
+	DB       *sqlx.DB
 }
 
 // APIMux contrói um mux ( que implementa http.Handler) com todas as rotas

@@ -6,6 +6,7 @@ import (
 	"net/http"
 	"net/http/pprof"
 
+	"github.com/jmoiron/sqlx"
 	"github.com/vitoraalmeida/service/business/web/v1/debug/checkgrp"
 	"go.uber.org/zap"
 )
@@ -29,12 +30,13 @@ func StandardLibraryMux() *http.ServeMux {
 
 // Adiciona os endpoints personalizados para readiness e liveness no mux
 // que adicionanmos as infos de debug da stdlib
-func Mux(build string, log *zap.SugaredLogger) http.Handler {
+func Mux(build string, log *zap.SugaredLogger, db *sqlx.DB) http.Handler {
 	mux := StandardLibraryMux()
 
 	cgh := checkgrp.Handlers{
 		Build: build,
 		Log:   log,
+		DB:    db,
 	}
 	mux.HandleFunc("/debug/readiness", cgh.Readiness)
 	mux.HandleFunc("/debug/liveness", cgh.Liveness)
