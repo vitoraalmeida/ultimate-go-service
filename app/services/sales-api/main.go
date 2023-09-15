@@ -13,7 +13,7 @@ import (
 
 	"github.com/ardanlabs/conf/v3"
 	"github.com/vitoraalmeida/service/app/services/sales-api/handlers"
-	"github.com/vitoraalmeida/service/business/sys/database"
+	database "github.com/vitoraalmeida/service/business/sys/database/pgx"
 	"github.com/vitoraalmeida/service/business/web/auth"
 	"github.com/vitoraalmeida/service/business/web/v1/debug"
 	"github.com/vitoraalmeida/service/foundation/keystore"
