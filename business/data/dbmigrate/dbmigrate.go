@@ -1,4 +1,5 @@
 // Package dbmigrate cobtém o schema do bd, migrations e dados para seeding.
+// utiliza o pacote darwin para executar migrations
 package dbmigrate
 
 import (

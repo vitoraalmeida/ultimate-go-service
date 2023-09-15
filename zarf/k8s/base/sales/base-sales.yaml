@@ -31,6 +31,13 @@ spec:
     spec:
       terminationGracePeriodSeconds: 60
 
+      # container para executar o binário de admin que faz as migrations
+      initContainers:
+      - name: init-migrate
+        image: service-image
+        command: ['./admin']
+
+
       containers:
       - name: sales-api
         # a imagem é passada durante a customização (kustomize)
