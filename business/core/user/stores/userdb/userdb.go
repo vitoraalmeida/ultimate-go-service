@@ -35,6 +35,7 @@ func NewStore(log *zap.SugaredLogger, db *sqlx.DB) *Store {
 	}
 }
 
+/*
 func (s *Store) WithinTran(ctx context.Context, fn func(s user.Storer) error) error {
 	if s.inTran {
 		return fn(s)
@@ -48,6 +49,7 @@ func (s *Store) WithinTran(ctx context.Context, fn func(s user.Storer) error) er
 		return fn(s)
 	}
 }
+*/
 
 // Create insere um novo usuário no banco
 func (s *Store) Create(ctx context.Context, usr user.User) error {

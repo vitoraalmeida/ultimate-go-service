@@ -6,6 +6,9 @@ import (
 
 	"github.com/jmoiron/sqlx"
 	"github.com/vitoraalmeida/service/app/services/sales-api/handlers/v1/testgrp"
+	"github.com/vitoraalmeida/service/app/services/sales-api/handlers/v1/usergrp"
+	"github.com/vitoraalmeida/service/business/core/user"
+	"github.com/vitoraalmeida/service/business/core/user/stores/userdb"
 	"github.com/vitoraalmeida/service/business/web/auth"
 	"github.com/vitoraalmeida/service/business/web/v1/mid"
 	"github.com/vitoraalmeida/service/foundation/web"
@@ -36,6 +39,14 @@ func APIMux(cfg APIMuxConfig) *web.App {
 	app.Handle(http.MethodGet, "/test", testgrp.Test)
 	// Registra handler para testar autenticação
 	app.Handle(http.MethodGet, "/test/auth", testgrp.Test, mid.Authenticate(cfg.Auth), mid.Authorize(cfg.Auth, auth.RuleAdminOnly))
+
+	// -------------------------------------------------------------------------
+
+	usrCore := user.NewCore(userdb.NewStore(cfg.Log, cfg.DB))
+
+	ugh := usergrp.New(usrCore)
+
+	app.Handle(http.MethodGet, "/users", ugh.Query)
 
 	// o objeto App implementa a internface http.Handler que é necessário para
 	// construir um http.Server

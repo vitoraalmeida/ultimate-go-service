@@ -134,15 +134,9 @@ metrics-view-local:
 	expvarmon -ports="localhost:4000" -vars="build,requests,goroutines,errors,panics,mem:memstats.Alloc"
 
 
-test-endpoint:
-	curl -il localhost:3000/test
-
-test-endpoint-auth:
-	curl -il -H "Authorization: Bearer ${TOKEN}" $(SERVICE_NAME).$(NAMESPACE).svc.cluster.local:3000/test/auth
-
-test-endpoint-auth-local:
-	curl -il -H "Authorization: Bearer ${TOKEN}" localhost:3000/test/auth
-
+# ==============================================================================
+# endpoints
+#
 
 liveness-local:
 	curl -il http://localhost:4000/debug/liveness
@@ -156,6 +150,24 @@ readiness-local:
 readiness:
 	curl -il http://$(SERVICE_NAME).$(NAMESPACE).svc.cluster.local:4000/debug/readiness
 
+test-endpoint:
+	curl -il localhost:3000/test
+
+test-endpoint-auth:
+	curl -il -H "Authorization: Bearer ${TOKEN}" $(SERVICE_NAME).$(NAMESPACE).svc.cluster.local:3000/test/auth
+
+test-endpoint-auth-local:
+	curl -il -H "Authorization: Bearer ${TOKEN}" localhost:3000/test/auth
+
+query-local:
+	@curl -s "http://localhost:3000/users?page=1&rows=2&orderBy=name,ASC"
+
+query:
+	@curl -s http://$(SERVICE_NAME).$(NAMESPACE).svc.cluster.local:3000/users?page=1&rows=2
+
+
+# ==============================================================================
+# Databse
 pgcli-local:
 	pgcli postgresql://postgres:postgres@localhost
 
