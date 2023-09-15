@@ -1,5 +1,7 @@
 // Package database provê funções para acessar o banco de dados de diferentes
 // formas (queries, configuração, transactions), usando sqlx e pgx como driver
+// e possibilitando executar filtros e ordenações, além de fazer logging antes
+// e depois de executar queies
 package database
 
 import (
@@ -144,6 +146,7 @@ func WithinTran(ctx context.Context, log *zap.SugaredLogger, db *sqlx.DB, fn fun
 
 // ExecContext função helper para executar operações CUD com logging e tracing
 func ExecContext(ctx context.Context, log *zap.SugaredLogger, db sqlx.ExtContext, query string) error {
+	// passa um struct vazio pois não são passados dados para serem modificados como em UPDATES
 	return NamedExecContext(ctx, log, db, query, struct{}{})
 }
 
@@ -158,6 +161,18 @@ func NamedExecContext(ctx context.Context, log *zap.SugaredLogger, db sqlx.ExtCo
 		log.WithOptions(zap.AddCallerSkip(2)).Infow("database.NamedExecContext", "trace_id", web.GetTraceID(ctx), "query", q)
 	}
 
+	/*
+	   // Named queries, using `:name` as the bindvar.  Automatic bindvar support
+	   // which takes into account the dbtype based on the driverName on sqlx.Open/Connect
+
+	       _, err = db.NamedExec(`INSERT INTO person (first_name,last_name,email) VALUES (:first,:last,:email)`,
+	           map[string]interface{}{
+	               "first": "Bin",
+	               "last": "Smuth",
+	               "email": "bensmith@allblacks.nz",
+	       })
+
+	*/
 	if _, err := sqlx.NamedExecContext(ctx, db, query, data); err != nil {
 		if pqerr, ok := err.(*pgconn.PgError); ok {
 			switch pqerr.Code {
@@ -174,14 +189,15 @@ func NamedExecContext(ctx context.Context, log *zap.SugaredLogger, db sqlx.ExtCo
 }
 
 // QuerySlice função para executar queries que retornam uma coleção de dados para
-// para ser convertido num slice
+// para ser convertido num slice de Structs
 func QuerySlice[T any](ctx context.Context, log *zap.SugaredLogger, db sqlx.ExtContext, query string, dest *[]T) error {
 	// passa scruct vazio, pois a função aceita dados em que os campos podem ser substituidos
+	// mas no caso de quem usar QuerySlice não quer selecionar os dados que serão consultados
 	return namedQuerySlice(ctx, log, db, query, struct{}{}, dest, false)
 }
 
 // QuerySlice função para executar queries que retornam uma coleção de dados para
-// para ser convertido num slice para dados que podem ter campos substituídos
+// para ser convertido num slice de structs para dados que podem ter campos substituídos
 func NamedQuerySlice[T any](ctx context.Context, log *zap.SugaredLogger, db sqlx.ExtContext, query string, data any, dest *[]T) error {
 	return namedQuerySlice(ctx, log, db, query, data, dest, false)
 }
@@ -194,6 +210,15 @@ func NamedQuerySliceUsingIn[T any](ctx context.Context, log *zap.SugaredLogger, 
 }
 
 func namedQuerySlice[T any](ctx context.Context, log *zap.SugaredLogger, db sqlx.ExtContext, query string, data any, dest *[]T, withIn bool) error {
+	/*
+		data é o map usado para armazenar quais campos serão
+		passado na query para selecionar por valores
+		SELECT * FROM users WHERE name = :name, user_id = :id;
+
+		data = map[string]interface{}
+		data[user_id] = *user.ID
+		data[name] = *user.Name
+	*/
 	q := queryString(query, data)
 
 	log.WithOptions(zap.AddCallerSkip(3)).Infow("database.NamedQuerySlice", "trace_id", web.GetTraceID(ctx), "query", q)
@@ -219,6 +244,13 @@ func namedQuerySlice[T any](ctx context.Context, log *zap.SugaredLogger, db sqlx
 		}()
 
 	default:
+		// recebe a query e substitui os valores dos campos selecionados
+		// na query pelos nomes dos valores do objeto go em questão
+		// WHERE name = :name, user_id = :user_id",
+		//            data[name]       data[user_id]
+		//Ex Selects Mr. Smith from the database
+		// rows, err = db.NamedQuery(`SELECT * FROM person WHERE first_name=:fn`, map[string]interface{}{"fn": "Bin"})
+
 		rows, err = sqlx.NamedQueryContext(ctx, db, query, data)
 	}
 
@@ -288,6 +320,10 @@ func namedQueryStruct(ctx context.Context, log *zap.SugaredLogger, db sqlx.ExtCo
 		}()
 
 	default:
+		// recebe a query e substitui os valores dos campos selecionados
+		// na query pelos nomes dos valores do objeto go em questão
+		// WHERE name = :name, user_id = :user_id",
+		//            data[name]       data[user_id]
 		rows, err = sqlx.NamedQueryContext(ctx, db, query, data)
 	}
 
@@ -303,6 +339,10 @@ func namedQueryStruct(ctx context.Context, log *zap.SugaredLogger, db sqlx.ExtCo
 		return ErrDBNotFound
 	}
 
+	// dest é a estrutura de dados que foi passada para receber os
+	// valores recuperados do banco de dados
+	// se estamos fazendo queries de usuários, então dest pode ser
+	// []User
 	if err := rows.StructScan(dest); err != nil {
 		return err
 	}

@@ -122,8 +122,7 @@ APP       --O--O-O------------O-O-O-------O--O-O--------O-O-O--------O-O-O---
           | +---|----+  |  |+----|---+| | +----|---+| |+---|----+| |+---|----+ |
 Business  +-----|-------+  +-----|----+ +------|----+ +----|-----+ +----|------+                      
                 +----------------+-------------+-----------+------------+
-                    VIEW                       |
-                                              +--+ 
+                    VIEW                       | +--+ 
                                               |DB|
                                               +--+
         ----------------------------------------------------------------
@@ -135,7 +134,6 @@ domínios separados
 
 
 ### Validações
-
 Para evitar que toda chamada na camada de business e foundation deva ser validada
 e validações muitas vezes precisam bater no banco de dados para buscar uma info,
 estabelecemos que a camada de foundation e business confiam nos dados que entram
@@ -145,4 +143,43 @@ Além disso, para mitigar a falta de validações fora da camada de aplicação,
 o sistema de tipos e métodos "parse" para garantir que os dados que entram são
 do tipo que queremos
 
-### 
+### Acesso a dados
+
+A camada de busines define os domínios do negócio e possui modelos que representam
+o domínio. Para cada domínio, teremos uma subcamada de armazenamento atrelada,
+que representa aquele modelo do domínio na forma que será armazenado no banco de dados.
+E para operar em cima de cada domínio, teremos modelos diferentes na camada de aplicação
+que representarão aquele domínio na forma necessária para lidar com especificidades
+de aplicação. 
+
+Entre cada modelo, fazemos a transformação para que cada camada possa operar no
+formato que precisa
+
+```
+                            External input
+            
+          --O--O-O------------O-O-O-------O--O-O--------O-O-O--------O-O-O---  /endpoints
+          +-|--|-|------+  +--|-|-|---+ +-|--|-|----+ +-|-|-|----+ +-|-|-|-----+ Handlers
+          | +----------+|  |+-----+   | | +--------+| |+-----+   | |+------+   |
+          | |SalesUsers||  ||Users|   | | |Products|| ||Sales|   | ||Orders|   | Modelos de aplicação
+          | +----|-----+|  |+--|--+   | | +--------+| |+-----+   | |+---|--+   |
+          +------|------+  +---|------+ +------|----+ +---|------+ +----|-------+
+APP -------------|-------------|---------------|----------|-------------|----------  
+          +------|------+  +---|------+ +------|----+ +---|------+ +----|------+ 
+          | +----------+|  |+-----+   | | +----|---+| |+-----+   | |+------+   |                      
+          | |SalesUsers||  ||Users|   | | |Products|| ||Sales|   | ||Orders|   | = Modelos de domínios          
+          | +----|-----+|  |+--|--+   | | +----|---+| |+--|--+   | |+---|--+   |                      
+          | +----|---+  |  |+--|-----+| | +----|---+| |+--|-----+| |+---|----+ | 
+          | | Storage|  |  || Storage|| | | Storage|| || Storage|| || Storage| | Modelos de acesso a dados
+          | +---|----+  |  |+----|---+| | +----|---+| |+---|----+| |+---|----+ |
+Business  +-----|-------+  +-----|----+ +------|----+ +----|-----+ +----|------+                      
+                +----------------+-------------+-----------+------------+
+                    VIEW                       |
+                                              +--+ 
+                                              |DB|
+                                              +--+
+        ----------------------------------------------------------------
+```
+
+Isso permite que cada modelo não exponha detalhes de implementação para camadas
+acima e abaixo
